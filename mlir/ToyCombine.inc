@@ -11,22 +11,31 @@
 */
 struct FoldConstantReshapeOptPattern : public ::mlir::RewritePattern {
   FoldConstantReshapeOptPattern(::mlir::MLIRContext *context)
-      : ::mlir::RewritePattern("toy.reshape", {"toy.constant"}, 2, context) {}
+      : ::mlir::RewritePattern("toy.reshape", 2, context, {"toy.constant"}) {}
   ::mlir::LogicalResult matchAndRewrite(::mlir::Operation *op0,
       ::mlir::PatternRewriter &rewriter) const override {
     // Variables for capturing values and attributes used while creating ops
     ::mlir::DenseElementsAttr arg;
     ::mlir::toy::ReshapeOp res;
-    ::mlir::Operation *tblgen_ops[2];
+    ::llvm::SmallVector<::mlir::Operation *, 4> tblgen_ops;
 
     // Match
-    tblgen_ops[0] = op0;
-    auto castedOp0 = ::llvm::dyn_cast_or_null<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
+    tblgen_ops.push_back(op0);
+    auto castedOp0 = ::llvm::dyn_cast<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
     res = castedOp0;
     {
       auto *op1 = (*castedOp0.getODSOperands(0).begin()).getDefiningOp();
-      auto castedOp1 = ::llvm::dyn_cast_or_null<::mlir::toy::ConstantOp>(op1); (void)castedOp1;
-      if (!castedOp1) return ::mlir::failure();
+      if (!(op1)){
+        return rewriter.notifyMatchFailure(castedOp0, [&](::mlir::Diagnostic &diag) {
+          diag << "Operand 0 of castedOp0 has null definingOp";
+        });
+      }
+      auto castedOp1 = ::llvm::dyn_cast<::mlir::toy::ConstantOp>(op1); (void)castedOp1;
+      if (!(castedOp1)){
+        return rewriter.notifyMatchFailure(op1, [&](::mlir::Diagnostic &diag) {
+          diag << "castedOp1 is not ::mlir::toy::ConstantOp type";
+        });
+      }
       {
         auto tblgen_attr = op1->getAttrOfType<::mlir::DenseElementsAttr>("value");(void)tblgen_attr;
         if (!(tblgen_attr)){
@@ -36,27 +45,28 @@ struct FoldConstantReshapeOptPattern : public ::mlir::RewritePattern {
         }
         arg = tblgen_attr;
       }
-      tblgen_ops[1] = op1;
+      tblgen_ops.push_back(op1);
     }
 
     // Rewrite
     auto odsLoc = rewriter.getFusedLoc({tblgen_ops[0]->getLoc(), tblgen_ops[1]->getLoc()}); (void)odsLoc;
     ::llvm::SmallVector<::mlir::Value, 4> tblgen_repl_values;
-    ::mlir::toy::ConstantOp tblgen_ConstantOp_0;
+    auto nativeVar_0 = arg.reshape(((*res.getODSResults(0).begin()).getType()).cast<ShapedType>()); (void)nativeVar_0;
+    ::mlir::toy::ConstantOp tblgen_ConstantOp_1;
     {
       ::mlir::SmallVector<::mlir::Value, 4> tblgen_values; (void)tblgen_values;
       ::mlir::SmallVector<::mlir::NamedAttribute, 4> tblgen_attrs; (void)tblgen_attrs;
-      if (auto tmpAttr = arg.reshape(((*res.getODSResults(0).begin()).getType()).cast<ShapedType>())) {
+      if (auto tmpAttr = nativeVar_0) {
         tblgen_attrs.emplace_back(rewriter.getIdentifier("value"), tmpAttr);
       }
       ::mlir::SmallVector<::mlir::Type, 4> tblgen_types; (void)tblgen_types;
       for (auto v: castedOp0.getODSResults(0)) {
         tblgen_types.push_back(v.getType());
       }
-      tblgen_ConstantOp_0 = rewriter.create<::mlir::toy::ConstantOp>(odsLoc, tblgen_types, tblgen_values, tblgen_attrs);
+      tblgen_ConstantOp_1 = rewriter.create<::mlir::toy::ConstantOp>(odsLoc, tblgen_types, tblgen_values, tblgen_attrs);
     }
 
-    for (auto v: ::llvm::SmallVector<::mlir::Value, 4>{ tblgen_ConstantOp_0.getODSResults(0) }) {
+    for (auto v: ::llvm::SmallVector<::mlir::Value, 4>{ tblgen_ConstantOp_1.getODSResults(0) }) {
       tblgen_repl_values.push_back(v);
     }
 
@@ -70,17 +80,17 @@ struct FoldConstantReshapeOptPattern : public ::mlir::RewritePattern {
 */
 struct RedundantReshapeOptPattern : public ::mlir::RewritePattern {
   RedundantReshapeOptPattern(::mlir::MLIRContext *context)
-      : ::mlir::RewritePattern("toy.reshape", {}, 1, context) {}
+      : ::mlir::RewritePattern("toy.reshape", 1, context, {}) {}
   ::mlir::LogicalResult matchAndRewrite(::mlir::Operation *op0,
       ::mlir::PatternRewriter &rewriter) const override {
     // Variables for capturing values and attributes used while creating ops
     ::mlir::Operation::operand_range arg(op0->getOperands());
     ::mlir::toy::ReshapeOp res;
-    ::mlir::Operation *tblgen_ops[1];
+    ::llvm::SmallVector<::mlir::Operation *, 4> tblgen_ops;
 
     // Match
-    tblgen_ops[0] = op0;
-    auto castedOp0 = ::llvm::dyn_cast_or_null<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
+    tblgen_ops.push_back(op0);
+    auto castedOp0 = ::llvm::dyn_cast<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
     res = castedOp0;
     arg = castedOp0.getODSOperands(0);
     if (!(((*res.getODSResults(0).begin()).getType() == (*arg.begin()).getType()))){
@@ -107,22 +117,31 @@ struct RedundantReshapeOptPattern : public ::mlir::RewritePattern {
 */
 struct ReshapeReshapeOptPattern : public ::mlir::RewritePattern {
   ReshapeReshapeOptPattern(::mlir::MLIRContext *context)
-      : ::mlir::RewritePattern("toy.reshape", {"toy.reshape"}, 2, context) {}
+      : ::mlir::RewritePattern("toy.reshape", 2, context, {"toy.reshape"}) {}
   ::mlir::LogicalResult matchAndRewrite(::mlir::Operation *op0,
       ::mlir::PatternRewriter &rewriter) const override {
     // Variables for capturing values and attributes used while creating ops
     ::mlir::Operation::operand_range arg(op0->getOperands());
-    ::mlir::Operation *tblgen_ops[2];
+    ::llvm::SmallVector<::mlir::Operation *, 4> tblgen_ops;
 
     // Match
-    tblgen_ops[0] = op0;
-    auto castedOp0 = ::llvm::dyn_cast_or_null<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
+    tblgen_ops.push_back(op0);
+    auto castedOp0 = ::llvm::dyn_cast<::mlir::toy::ReshapeOp>(op0); (void)castedOp0;
     {
       auto *op1 = (*castedOp0.getODSOperands(0).begin()).getDefiningOp();
-      auto castedOp1 = ::llvm::dyn_cast_or_null<::mlir::toy::ReshapeOp>(op1); (void)castedOp1;
-      if (!castedOp1) return ::mlir::failure();
+      if (!(op1)){
+        return rewriter.notifyMatchFailure(castedOp0, [&](::mlir::Diagnostic &diag) {
+          diag << "Operand 0 of castedOp0 has null definingOp";
+        });
+      }
+      auto castedOp1 = ::llvm::dyn_cast<::mlir::toy::ReshapeOp>(op1); (void)castedOp1;
+      if (!(castedOp1)){
+        return rewriter.notifyMatchFailure(op1, [&](::mlir::Diagnostic &diag) {
+          diag << "castedOp1 is not ::mlir::toy::ReshapeOp type";
+        });
+      }
       arg = castedOp1.getODSOperands(0);
-      tblgen_ops[1] = op1;
+      tblgen_ops.push_back(op1);
     }
 
     // Rewrite
@@ -149,8 +168,8 @@ struct ReshapeReshapeOptPattern : public ::mlir::RewritePattern {
   };
 };
 
-void LLVM_ATTRIBUTE_UNUSED populateWithGenerated(::mlir::MLIRContext *context, ::mlir::OwningRewritePatternList &patterns) {
-  patterns.insert<FoldConstantReshapeOptPattern>(context);
-  patterns.insert<RedundantReshapeOptPattern>(context);
-  patterns.insert<ReshapeReshapeOptPattern>(context);
+void LLVM_ATTRIBUTE_UNUSED populateWithGenerated(::mlir::RewritePatternSet &patterns) {
+  patterns.add<FoldConstantReshapeOptPattern>(patterns.getContext());
+  patterns.add<RedundantReshapeOptPattern>(patterns.getContext());
+  patterns.add<ReshapeReshapeOptPattern>(patterns.getContext());
 }

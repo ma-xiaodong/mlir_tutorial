@@ -21,7 +21,7 @@ Ops.cpp.inc: include/toy/Ops.td
 	mlir-tblgen -gen-op-defs ${INC_PATH} include/toy/Ops.td --write-if-changed -o include/toy/Ops.cpp.inc 
 AST.o: parser/AST.cpp
 	g++ -O0 -g ${INC_PATH} -c parser/AST.cpp -o parser/AST.o
-Dialect.o: Ops.h.inc
+Dialect.o: mlir/Dialect.cpp
 	g++ -O0 -g ${INC_PATH} -fno-rtti -c mlir/Dialect.cpp -o mlir/Dialect.o
 MLIRGen.o: mlir/MLIRGen.cpp Ops.h.inc
 	g++ -O0 -g ${INC_PATH} -c mlir/MLIRGen.cpp -o mlir/MLIRGen.o

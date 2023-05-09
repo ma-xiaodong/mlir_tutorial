@@ -7,5 +7,5 @@
 \*===----------------------------------------------------------------------===*/
 
 void ShapeInference::inferShapes() {
-      return getImpl()->inferShapes(getOperation());
+      return getImpl()->inferShapes(getImpl(), getOperation());
   }

@@ -60,6 +60,7 @@ public:
 /// Include the auto-generated header file containing the declarations of the
 /// toy operations.
 #define GET_OP_CLASSES
+#include "toy/ShapeInferenceOpInterface.h.inc"
 #include "toy/Ops.h.inc"
 
 namespace mlir {
